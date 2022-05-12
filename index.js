@@ -10,6 +10,30 @@ const cors = require('cors');
 app.use(cors());
 app.use(express.json());
 
+// mongodb connection 
+
+
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.xi0ip.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+async function run() {
+    try {
+        await client.connect();
+        const collection = client.db("the_book_planet").collection("items");
+
+        // get items to database 
+        app.get('/items', async (req, res) => {
+            const query = {};
+            const cursor = collection.find(query);
+            const inventoryItems = await cursor.toArray();
+            res.send(inventoryItems);
+        })
+
+    }
+    finally { }
+}
+run().catch(console.dir);
+
 
 
 app.get('/', (req, res) => {
