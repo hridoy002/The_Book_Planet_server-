@@ -29,6 +29,40 @@ async function run() {
             res.send(inventoryItems);
         })
 
+         // get individual product id 
+         app.get('/items/:id', async(req,res)=>{
+            const id =req.params.id;
+            const query = {_id: ObjectId(id)};
+            const item = await collection.findOne(query);
+            res.send(item);
+        })
+
+        // post api 
+        app.post('/items', async(req,res) =>{
+            const  books = req.body;
+            console.log('Adding new book');
+            const result = await collection.insertOne(books);
+            res.send({result:'Book added'})
+        })
+
+        // update quantity
+        app.put('/user', (req, res) => {
+            const id = req.params.id;
+            const query = {_id:ObjectId(id)};
+            const filter = {query}
+            const upadate=
+            res.send('Got a PUT request at /user')
+          })
+
+        //delete item
+        app.delete('/items/:id', async(req,res) =>{
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await collection.deleteOne(query);
+            res.send(result);
+        })
+ 
+
     }
     finally { }
 }
