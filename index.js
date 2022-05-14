@@ -20,6 +20,7 @@ async function run() {
     try {
         await client.connect();
         const collection = client.db("the_book_planet").collection("items");
+        const selectCollection = client.db("the_book_planet").collection("select");
 
         // get items to database 
         app.get('/items', async (req, res) => {
@@ -29,39 +30,72 @@ async function run() {
             res.send(inventoryItems);
         })
 
-         // get individual product id 
-         app.get('/items/:id', async(req,res)=>{
-            const id =req.params.id;
-            const query = {_id: ObjectId(id)};
+        // get individual product id 
+        app.get('/items/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
             const item = await collection.findOne(query);
             res.send(item);
         })
 
+
+        // myitem get data 
+        app.get('/select', async(req,res)=>{
+            const email = req.query.email;
+            
+            const query ={email:email};
+            const cursor = selectCollection.find(query);
+            const myitems = await cursor.toArray();
+            res.send(myitems)
+        })
+
+        //select item post
+        app.post('/select', async (req, res) => {
+            const select = req.body;
+            const result = await selectCollection.insertOne(select);
+            res.send(result);
+        })
+
         // post api 
-        app.post('/items', async(req,res) =>{
-            const  books = req.body;
+        app.post('/items', async (req, res) => {
+            const books = req.body;
             console.log('Adding new book');
             const result = await collection.insertOne(books);
-            res.send({result:'Book added'})
+            res.send({ result: 'Book added' })
         })
 
         // update quantity
-        app.put('/user', (req, res) => {
+        app.put('/items/:id', async(req, res) => {
             const id = req.params.id;
-            const query = {_id:ObjectId(id)};
-            const filter = {query}
-            const upadate=
-            res.send('Got a PUT request at /user')
-          })
+            const updateQuantity = req.body;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updated = {
+                $set: {
+                    quantity: parseInt(updateQuantity.quantity)-1,
+                }
+            };
+
+            const result = await collection.updateOne(filter,updated, options);
+            res.send(result);
+        })
 
         //delete item
-        app.delete('/items/:id', async(req,res) =>{
+        app.delete('/items/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id: ObjectId(id)};
+            const query = { _id: ObjectId(id) };
             const result = await collection.deleteOne(query);
             res.send(result);
         })
- 
+
+        //delete my item
+        app.delete('/select/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await selectCollection.deleteOne(query);
+            res.send(result);
+        })
+
 
     }
     finally { }
